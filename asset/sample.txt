@@ -1,0 +1,22 @@
+import pandas as pd
+import plotly.graph_objects as go
+
+df = pd.read_csv('Data.csv')
+df['text'] = "State: " + df['GeoName']
+
+fig = go.Figure(data=go.Choropleth(
+	locations=df['code'],
+	z=df['2019'].astype(float),
+	locationmode='USA-status',
+	colorscale='Blues',
+	colorbar_title='Real Income per Capita',
+	text=df['text'],
+
+))
+
+fig.update_layout(
+	title_text='2019 Real Income',
+	geo_scope='usa',
+)
+
+fig.show()
