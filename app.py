@@ -93,30 +93,55 @@ def main():
 
             # =============== Line Graph for forecating Trend ==================== 
             with st.expander('Forecasted Trend'):
+
                 colu1, colu2 = st.columns(2)
                 with colu1:
-                    municipal = st.selectbox(
-                    'Please Select Municipal',
-                        ('Banaybanay','Lupon','Gov. Gen.','Mati','Manay','Baganga','Caraga','Boston','Cateel'))
-                    st.write('You selected:', municipal)
+                    trendProduction = st.selectbox(
+                    'Select Municipal',
+                    ('Banaybanay','Lupon','Gov. Gen.','Mati','Manay','Baganga','Caraga','Boston','Cateel'))
+                
+                    trendProductionBatch = st.radio(
+                        "Select Variety",
+                        ('Hybrid', 'Inbrid'))
 
-                    trend = visualize.lineGraphOne(municipal)
-                    trend2 = visualize.lineGraphTwo(municipal)
+                    trend = visualize.lineGraphOne(trendProduction,trendProductionBatch)
+                    trend2 = visualize.lineGraphTwo(trendProduction,trendProductionBatch)
+                    print(trend)
+                    print('======================')
+                    print(trend2)
+                    
+                    match (trendProductionBatch):
+                        case 'Hybrid':
+                            print(trendProduction)
+                            #======================= Crop Batch 1===========================
+                            f = px.line(trend, x="year", y="hybrid", title="Crop batch 1",
+                                    color='label', height=400)
 
-                    #======================= Crop Batch 1===========================
-                    f = px.line(trend, x="year", y="production_mt", title="Crop batch 1",
-                            color='label', height=400)
+                            f.update_xaxes(title="Year")
+                            f.update_yaxes(title="Rice Production metric tons")
+                            st.plotly_chart(f)
+                            #==================== Crop batch 2 ===============================
+                            s = px.line(trend2, x="year", y="hybrid", title="Crop batch 2",
+                                    color='label', height=400)
 
-                    f.update_xaxes(title="Year")
-                    f.update_yaxes(title="Rice Production metric tons")
-                    st.plotly_chart(f)
-                    #==================== Crop batch 2 ===============================
-                    s = px.line(trend2, x="year", y="production_mt", title="Crop batch 2",
-                            color='label', height=400)
+                            s.update_xaxes(title="Year")
+                            s.update_yaxes(title="Rice Production metric tons")
+                            st.plotly_chart(s)
+                        case 'Inbrid':
+                            #======================= Crop Batch 1===========================
+                            f = px.line(trend, x="year", y="inbrid", title="Crop batch 1",
+                                    color='label', height=400)
 
-                    s.update_xaxes(title="Year")
-                    s.update_yaxes(title="Rice Production metric tons")
-                    st.plotly_chart(s)
+                            f.update_xaxes(title="Year")
+                            f.update_yaxes(title="Rice Production metric tons")
+                            st.plotly_chart(f)
+                            #==================== Crop batch 2 ===============================
+                            s = px.line(trend2, x="year", y="inbrid", title="Crop batch 2",
+                                    color='label', height=400)
+
+                            s.update_xaxes(title="Year")
+                            s.update_yaxes(title="Rice Production metric tons")
+                            st.plotly_chart(s)
 
             
             # ================= End of Line Graph for forecasting Trend ===================

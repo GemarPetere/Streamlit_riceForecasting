@@ -134,60 +134,115 @@ class VisualizeData:
         except psycopg2.DatabaseError as error:
             return error
     
-    def lineGraphOne(self,municipal):
-
+    def lineGraphOne(self,municipal,variety):
+        dfAppended = None
         try:
-            dfActual = pd.read_sql(('SELECT year,production_mt FROM public.resources '
-                                'WHERE municipality = %(muni)s AND crop_batch = %(crop)s'),
-                            engine,params={"muni":'%s'%municipal,'crop':'1'})
+            match (variety):
+                case 'Hybrid':
+                
+                    dfActual = pd.read_sql(('SELECT year,hybrid FROM public.resources '
+                                        'WHERE municipality = %(muni)s AND crop_batch = %(crop)s'),
+                                    engine,params={"muni":'%s'%municipal,'crop':'1'})
 
 
-            dfActual['label'] = 'Actual'
-            dfActual = dfActual.sort_values(by='year', ascending=True)
+                    dfActual['label'] = 'Actual'
+                    dfActual = dfActual.sort_values(by='year', ascending=True)
 
-            if len(dfActual.index > 0):
-                dfPredict = pd.read_sql(('SELECT year,production_mt FROM public.predicted '
-                                'WHERE municipality = %(muni)s AND crop_batch = %(crop)s'),
-                            engine,params={"muni":'%s'%municipal,'crop':'1'})
+                    if len(dfActual.index > 0):
+                        dfPredict = pd.read_sql(('SELECT year,hybrid FROM public.predicted '
+                                        'WHERE municipality = %(muni)s AND crop_batch = %(crop)s'),
+                                    engine,params={"muni":'%s'%municipal,'crop':'1'})
 
 
-                dfPredict['label'] = 'Forecasted'
+                        dfPredict['label'] = 'Forecasted'
 
-                dfActual = dfActual.append(dfPredict.iloc[0], ignore_index=True)
-                dfActual.at[10,'label'] = 'Actual'
+                        dfActual = dfActual.append(dfPredict.iloc[0], ignore_index=True)
+                        dfActual.at[10,'label'] = 'Actual'
 
-                dfAppended = dfActual.append(dfPredict)
+                        dfAppended = dfActual.append(dfPredict)
+            
+                case 'Inbrid':
+                    dfActual = pd.read_sql(('SELECT year,inbrid FROM public.resources '
+                                        'WHERE municipality = %(muni)s AND crop_batch = %(crop)s'),
+                                    engine,params={"muni":'%s'%municipal,'crop':'1'})
 
-                return dfAppended
+
+                    dfActual['label'] = 'Actual'
+                    dfActual = dfActual.sort_values(by='year', ascending=True)
+
+                    if len(dfActual.index > 0):
+                        dfPredict = pd.read_sql(('SELECT year,inbrid FROM public.predicted '
+                                        'WHERE municipality = %(muni)s AND crop_batch = %(crop)s'),
+                                    engine,params={"muni":'%s'%municipal,'crop':'1'})
+
+
+                        dfPredict['label'] = 'Forecasted'
+
+                        dfActual = dfActual.append(dfPredict.iloc[0], ignore_index=True)
+                        dfActual.at[10,'label'] = 'Actual'
+
+                        dfAppended = dfActual.append(dfPredict)
+
+
+            return dfAppended
 
         except psycopg2.DatabaseError as error:
             return error
         
 
-    def lineGraphTwo(self,municipal):
+    def lineGraphTwo(self,municipal,variety):
+        dfAppended = None
         try:
-            dfActual = pd.read_sql(('SELECT year,production_mt FROM public.resources '
-                                'WHERE municipality = %(muni)s AND crop_batch = %(crop)s'),
-                            engine,params={"muni":'%s'%municipal,'crop':'2'})
+            match (variety):
+                case 'Hybrid':
+                
+                    dfActual = pd.read_sql(('SELECT year,hybrid FROM public.resources '
+                                        'WHERE municipality = %(muni)s AND crop_batch = %(crop)s'),
+                                    engine,params={"muni":'%s'%municipal,'crop':'2'})
 
 
-            dfActual['label'] = 'Actual'
-            dfActual = dfActual.sort_values(by='year', ascending=True)
+                    dfActual['label'] = 'Actual'
+                    dfActual = dfActual.sort_values(by='year', ascending=True)
 
-            if len(dfActual.index > 0):
-                dfPredict = pd.read_sql(('SELECT year,production_mt FROM public.predicted '
-                                'WHERE municipality = %(muni)s AND crop_batch = %(crop)s'),
-                            engine,params={"muni":'%s'%municipal,'crop':'2'})
+                    if len(dfActual.index > 0):
+                        dfPredict = pd.read_sql(('SELECT year,hybrid FROM public.predicted '
+                                        'WHERE municipality = %(muni)s AND crop_batch = %(crop)s'),
+                                    engine,params={"muni":'%s'%municipal,'crop':'2'})
 
 
-                dfPredict['label'] = 'Forecasted'
+                        dfPredict['label'] = 'Forecasted'
 
-                dfActual = dfActual.append(dfPredict.iloc[0], ignore_index=True)
-                dfActual.at[10,'label'] = 'Actual'
+                        dfActual = dfActual.append(dfPredict.iloc[0], ignore_index=True)
+                        dfActual.at[10,'label'] = 'Actual'
 
-                dfAppended2 = dfActual.append(dfPredict)
+                        dfAppended = dfActual.append(dfPredict)
+                    
+            
+                case 'Inbrid':
+                    dfActual = pd.read_sql(('SELECT year,inbrid FROM public.resources '
+                                        'WHERE municipality = %(muni)s AND crop_batch = %(crop)s'),
+                                    engine,params={"muni":'%s'%municipal,'crop':'2'})
 
-                return dfAppended2
+
+                    dfActual['label'] = 'Actual'
+                    dfActual = dfActual.sort_values(by='year', ascending=True)
+
+                    if len(dfActual.index > 0):
+                        dfPredict = pd.read_sql(('SELECT year,inbrid FROM public.predicted '
+                                        'WHERE municipality = %(muni)s AND crop_batch = %(crop)s'),
+                                    engine,params={"muni":'%s'%municipal,'crop':'2'})
+
+
+                        dfPredict['label'] = 'Forecasted'
+
+                        dfActual = dfActual.append(dfPredict.iloc[0], ignore_index=True)
+                        dfActual.at[10,'label'] = 'Actual'
+
+                        dfAppended = dfActual.append(dfPredict)
+                
+
+
+            return dfAppended
 
         except psycopg2.DatabaseError as error:
             return error
