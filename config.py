@@ -1,18 +1,15 @@
 #!/usr/bin/python
 from sqlalchemy import create_engine
+import streamlit as st
 import psycopg2
 import json
 
 
+@st.experimental_singleton
 def connect():
     connection = None
     try:
-        connection = psycopg2.connect(user = 'postgres',
-                                        password = 'postgres123',
-                                        host = 'localhost',
-                                        port = '5432',
-                                        database = 'postgres')
-        return connection
+        return psycopg2.connect(**st.secrets["postgres"])
     except (Exception, psycopg2.Error) as error :
         print ("Error while connecting to PostgreSQL", error)
         return connection
@@ -25,3 +22,8 @@ def engine():
         return engine
     except Exception as e:
         return e
+
+def init_connection():
+    return psycopg2.connect(**st.secrets["postgres"])
+
+conn = init_connection()
