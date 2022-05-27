@@ -106,9 +106,7 @@ def main():
 
                     trend = visualize.lineGraphOne(trendProduction,trendProductionBatch)
                     trend2 = visualize.lineGraphTwo(trendProduction,trendProductionBatch)
-                    print(trend)
-                    print('======================')
-                    print(trend2)
+                
                     
                     match (trendProductionBatch):
                         case 'Hybrid':
