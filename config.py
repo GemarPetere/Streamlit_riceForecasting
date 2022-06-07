@@ -14,16 +14,11 @@ def connect():
         print ("Error while connecting to PostgreSQL", error)
         return connection
 
-
+@st.experimental_singleton
 def engine():
-
     try:
         engine = create_engine('postgresql://postgres:postgres123@localhost:5432/postgres')
         return engine
     except Exception as e:
         return e
 
-def init_connection():
-    return psycopg2.connect(**st.secrets["postgres"])
-
-conn = init_connection()
