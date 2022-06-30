@@ -17,9 +17,8 @@ class Report:
      def getPredictedData(self,year):
 
         try:
-            df = pd.read_sql(('SELECT * FROM public.predicted '
-                                'WHERE year = %(year)s'),
-                            engine,params={"year":year})
+            df = pd.read_sql(('SELECT * FROM public.production '),
+                            engine)
             return df
         except psycopg2.DatabaseError as error:
             return error

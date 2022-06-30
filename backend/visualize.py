@@ -33,6 +33,9 @@ class VisualizeData:
         #This loop intended for process to get the total production
         for tobeTotal in df['production_mt']:
             total+=tobeTotal
+        
+        total = np.sum(df.loc[:,'production_mt':].values)
+        df['percent'] = df.loc[:,'production_mt':].sum(axis=1)/total * 100
 
         return df, total
 
@@ -145,7 +148,7 @@ class VisualizeData:
                                         'WHERE municipality = %(muni)s AND crop_batch = %(crop)s'),
                                     engine,params={"muni":'%s'%municipal,'crop':'1'})
 
-            dfActual['DataStatus'] = '0' 
+            dfActual['Data Crop 1'] = '0' 
             dfActual = dfActual.sort_values(by='year', ascending=True)
 
             reg = linear_model.LinearRegression()
@@ -165,14 +168,16 @@ class VisualizeData:
                     upland = dfActual['upland'].iloc[x]
                     temperature = dfActual['temperature'].iloc[x]
 
-                    forecasted = reg.predict([[year, hybrid, inbrid,lowland,upland,temperature,0]])
+                    forecasted = reg.predict([[int(year), float(hybrid), float(inbrid),float(lowland),float(upland),float(temperature),0]])
 
                     actualX = [year,hybrid,inbrid,lowland,upland,temperature,forecasted[0],1]
+
+                    print(actualX)
 
                     dfFinal.append(actualX)
                 x+=1
 
-            dfActuals = pd.DataFrame(dfFinal, columns = ["year","hybrid","inbrid","lowland","upland","temperature","production_mt","DataStatus"])
+            dfActuals = pd.DataFrame(dfFinal, columns = ["year","hybrid","inbrid","lowland","upland","temperature","production_mt","Data Crop 1"])
             dFinal = dfActual.append(dfActuals)
             dFinal.sort_values(by=['year'],inplace=True)
 
@@ -181,7 +186,7 @@ class VisualizeData:
             dfPredict = pd.read_sql(('SELECT year,hybrid,inbrid,lowland,upland,temperature,production_mt FROM public.predicted '
                                         'WHERE municipality = %(muni)s AND crop_batch = %(crop)s'),
                                     engine,params={"muni":'%s'%municipal,'crop':'1'})
-            dfPredict['DataStatus'] = 1
+            dfPredict['Data Crop 1'] = 1
 
           
                 
@@ -190,13 +195,14 @@ class VisualizeData:
             
             y=0
             while(y < len(dfAppended.index)):
-                if dfAppended['DataStatus'].iloc[y] == '0':
-                    dfAppended['DataStatus'].iloc[y] = 'Actual'
+                if dfAppended['Data Crop 1'].iloc[y] == '0':
+                    dfAppended['Data Crop 1'].iloc[y] = 'Actual'
                 else:
-                    dfAppended['DataStatus'].iloc[y] = 'Forecasted'
+                    dfAppended['Data Crop 1'].iloc[y] = 'Forecasted'
                 y+=1
-           
-            return dfAppended
+            
+            dfTable1 = self.toTableActualForecast1(dfAppended)
+            return dfAppended, dfTable1
 
         except psycopg2.DatabaseError as error:
             return error
@@ -211,7 +217,7 @@ class VisualizeData:
                                         'WHERE municipality = %(muni)s AND crop_batch = %(crop)s'),
                                     engine,params={"muni":'%s'%municipal,'crop':'2'})
 
-            dfActual['DataStatus'] = '0' 
+            dfActual['Data Crop 2'] = '0' 
             dfActual = dfActual.sort_values(by='year', ascending=True)
 
             reg = linear_model.LinearRegression()
@@ -231,14 +237,14 @@ class VisualizeData:
                     upland = dfActual['upland'].iloc[x]
                     temperature = dfActual['temperature'].iloc[x]
 
-                    forecasted = reg.predict([[year, hybrid, inbrid,lowland,upland,temperature,0]])
+                    forecasted = reg.predict([[int(year), float(hybrid), float(inbrid),float(lowland),float(upland),float(temperature),0]])
 
                     actualX = [year,hybrid,inbrid,lowland,upland,temperature,forecasted[0],1]
 
                     dfFinal.append(actualX)
                 x+=1
 
-            dfActuals = pd.DataFrame(dfFinal, columns = ["year","hybrid","inbrid","lowland","upland","temperature","production_mt","DataStatus"])
+            dfActuals = pd.DataFrame(dfFinal, columns = ["year","hybrid","inbrid","lowland","upland","temperature","production_mt","Data Crop 2"])
             dFinal = dfActual.append(dfActuals)
             dFinal.sort_values(by=['year'],inplace=True)
 
@@ -247,7 +253,7 @@ class VisualizeData:
             dfPredict = pd.read_sql(('SELECT year,hybrid,inbrid,lowland,upland,temperature,production_mt FROM public.predicted '
                                         'WHERE municipality = %(muni)s AND crop_batch = %(crop)s'),
                                     engine,params={"muni":'%s'%municipal,'crop':'2'})
-            dfPredict['DataStatus'] = 1
+            dfPredict['Data Crop 2'] = 1
 
           
                 
@@ -256,15 +262,40 @@ class VisualizeData:
             
             y=0
             while(y < len(dfAppended.index)):
-                if dfAppended['DataStatus'].iloc[y] == '0':
-                    dfAppended['DataStatus'].iloc[y] = 'Actual'
+                if dfAppended['Data Crop 2'].iloc[y] == '0':
+                    dfAppended['Data Crop 2'].iloc[y] = 'Actual'
                 else:
-                    dfAppended['DataStatus'].iloc[y] = 'Forecasted'
+                    dfAppended['Data Crop 2'].iloc[y] = 'Forecasted'
                 y+=1
-           
-            return dfAppended
+            dfTable2 = self.toTableActualForecast2(dfAppended)
+            return dfAppended,dfTable2
 
         except psycopg2.DatabaseError as error:
             return error
     
+    def toTableActualForecast2(self,data):
+        try:
+            data = data.drop(['hybrid','inbrid','lowland','upland','temperature'], axis=1)
+            newData = data.pivot_table('production_mt',['year'],'Data Crop 2')
+            
+            newData['Actual'] = newData['Actual'].replace(np.nan,0)
+            newData['Forecasted'] = newData['Forecasted'].replace(np.nan,0)
+            
+            return newData
+
+        except Exception as e:
+            print(e)
+    
+    def toTableActualForecast1(self,data):
+        try:
+            data = data.drop(['hybrid','inbrid','lowland','upland','temperature'], axis=1)
+            newData = data.pivot_table('production_mt',['year'],'Data Crop 1')
+            
+            newData['Actual'] = newData['Actual'].replace(np.nan,0)
+            newData['Forecasted'] = newData['Forecasted'].replace(np.nan,0)
+            
+            return newData
+
+        except Exception as e:
+            print(e)
 

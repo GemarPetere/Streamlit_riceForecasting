@@ -29,13 +29,14 @@ def main():
     visualizeActual = ActualValue()
     predict = Prediction()
     predict.getResource()
-    addData = AddData()
     storeResource = StoreResources()
     report = Report()
-    year = visualize.selectYear()
+    
 
 
-    menu = ['Dashboard', 'Add Data','Generate  Report']
+    menu = ['Dashboard','Forecasted and Actual Trend',
+            'Production Metric Tones','Metric Tones Distribution',
+            'View Map', 'Add Data','Generate  Report']
     choice = st.sidebar.selectbox("Menu", menu)
 
     match (choice):
@@ -84,52 +85,57 @@ def main():
                 st.subheader('Variety Factor')
                 st.line_chart(variety.rename(columns={'year':'index'}).set_index('index'))
 
+        
+        case 'Forecasted and Actual Trend':
+            # =============== Line Graph for forecating Trend ====================
+            st.header('Forecasted Vs Actual')
+
+            colu1, colu2 = st.columns(2)
+            with colu1:
+                trendProductionMuni = st.selectbox(
+                'Select Municipal',
+                ('Banaybanay','Lupon','Gov. Gen.','Mati','Manay','Baganga','Caraga','Boston','Cateel'))
+
+                trend = visualize.lineGraphOne(trendProductionMuni)
+                trend2 = visualize.lineGraphTwo(trendProductionMuni)
             
                 
+                #======================= Crop Batch 1===========================
+                f = px.line(trend[0], x="year", y="production_mt", title="Crop batch 1",
+                        color='Data Crop 1', height=400)
 
-            st.markdown("""<hr style="height:2px;border:none;color:#333;background-color:#333;" /> """, unsafe_allow_html=True)
+                f.update_xaxes(title="Year")
+                f.update_yaxes(title="Rice Production metric tons")
+                st.plotly_chart(f)
 
-            st.header('Predicted Values')
+                with st.expander('view 2nd Crop Data Frame'):
+                    st.dataframe(trend[1])
+                #==================== Crop batch 2 ===============================
+                s = px.line(trend2[0], x="year", y="production_mt", title="Crop batch 2",
+                        color='Data Crop 2', height=400)
 
-            # =============== Line Graph for forecating Trend ==================== 
-            with st.expander('Forecasted Trend'):
+                s.update_xaxes(title="Year")
+                s.update_yaxes(title="Rice Production metric tons")
+                st.plotly_chart(s)
 
-                colu1, colu2 = st.columns(2)
-                with colu1:
-                    trendProductionMuni = st.selectbox(
-                    'Select Municipal',
-                    ('Banaybanay','Lupon','Gov. Gen.','Mati','Manay','Baganga','Caraga','Boston','Cateel'))
+                with st.expander('View 2nd Crop Data Frame'):
+                    st.write(trend2[1])
 
-                    trend = visualize.lineGraphOne(trendProductionMuni)
-                    trend2 = visualize.lineGraphTwo(trendProductionMuni)
-                
                     
-                    #======================= Crop Batch 1===========================
-                    f = px.line(trend, x="year", y="production_mt", title="Crop batch 1",
-                            color='DataStatus', height=400)
-
-                    f.update_xaxes(title="Year")
-                    f.update_yaxes(title="Rice Production metric tons")
-                    st.plotly_chart(f)
-                    #==================== Crop batch 2 ===============================
-                    s = px.line(trend2, x="year", y="production_mt", title="Crop batch 2",
-                            color='DataStatus', height=400)
-
-                    s.update_xaxes(title="Year")
-                    s.update_yaxes(title="Rice Production metric tons")
-                    st.plotly_chart(s)
 
             
             # ================= End of Line Graph for forecasting Trend ===================
 
 
-
+        case 'Production Metric Tones':
+            #======================= BAR GRAPH ===========================================
+            st.header('Forecasted Metric Tones Per Municipality')
             col1, col2 = st.columns(2)
 
             with col1:
                 years = visualize.selectYear()
                 option = st.selectbox(
-                    'Select Municipality',
+                    'Select Year',
                     (years[0][0],years[1][0],years[2][0],years[3][0],years[4][0]))
                 st.write('You selected:', option)
 
@@ -143,6 +149,16 @@ def main():
             f.update_yaxes(title="Rice Production metric tons")
             st.plotly_chart(f)
 
+        case 'Metric Tones Distribution':
+            #======================== PIE GRAPH ================================
+            st.header('Forecasted Distribution Per Municipality')
+            years = visualize.selectYear()
+            
+            option = st.selectbox(
+                'Select Year',
+                (years[0][0],years[1][0],years[2][0],years[3][0],years[4][0]))
+            st.write('You selected:', option)
+
             cropYear = st.radio(
             "Select Crop Batch",
             ('1', '2'))
@@ -153,15 +169,32 @@ def main():
             f.update_xaxes(title="Year")
             f.update_yaxes(title="Rice Production")
             st.plotly_chart(f)
+
+            csv = report.convert_df(dfYear[0])
+
+            st.download_button(
+                label="Download Distribution Data as CSV",
+                data=csv,
+                file_name='distribution_data.csv',
+                mime='text/csv',
+            )
+
             st.subheader("Total Metric ton: {mt} mt".format(mt = dfYear[1]))
 
+        case 'View Map':
+            years = visualize.selectYear()
+            st.header('Forecasted Data in Map')
+            
+            option = st.selectbox(
+                'Select Year',
+                (years[0][0],years[1][0],years[2][0],years[3][0],years[4][0]))
+            st.write('You selected:', option)
 
-
-            #==============================================================
-            st.markdown("""<hr style="height:2px;border:none;color:#333;background-color:#333;" /> """, unsafe_allow_html=True)
-
-
-            dfMap = predict.mapping('2022',cropYear)
+            cropYear = st.radio(
+            "Select Crop Batch",
+            ('1', '2'))
+            
+            dfMap = predict.mapping(option,cropYear)
             
             df_new = predict.newDataFrameForMap(dfMap)
 
@@ -191,9 +224,9 @@ def main():
 
             folium.LayerControl().add_to(m)
             folium_static(m)
-        
+
         case 'Add Data':
-            st.subheader('File Upload & Saved file to Database')
+            """ st.subheader('File Upload & Saved file to Database')
             datafile = st.file_uploader("Upload CSV",type=['csv'])
 
             st.warning('Note! Make sure to have required attributes.')
@@ -206,9 +239,56 @@ def main():
                 if st.button('Save'):
                     success = addData.AddDataCsV(df)
                     if success:
-                        storeResource.getProduction()
+                        storeResource.getProduction() """
+            
+            #title = st.text_input('Input Muni', 'Life of Brian')
+            municipalities = st.selectbox(
+            'Select Municipality',
+            ('Banaybanay','Baganga','Boston','Caraga','Cateel','Gov Gen.','Lupon','Manay','Mati'))
+
+            dFrom = st.date_input(
+                "Date From",
+                datetime.date(2019, 7, 6))
+            st.write('Date Selected:', dFrom)
+
+            dTo = st.date_input(
+                "Date To",
+                datetime.date(2019, 7, 6))
+            st.write('Date Selected:', dTo)
+
+
+
+            hybrid = st.number_input('Input Hybrid')
+            st.write('Hybrid value: ', hybrid)
+            inbrid = st.number_input('Input Inbrid')
+            st.write('Inbrid value: ', inbrid)
+            lowland = st.number_input('Input Lowland')
+            st.write('Lowland value: ', lowland)
+            upland = st.number_input('Input Upland')
+            st.write('Upland value: ', upland)
+            farmer = st.number_input('Input Farmer')
+            st.write('Farmer value: ', farmer)
+            area = st.number_input('Input Area Harvested')
+            st.write('Area value: ', area)
+            crop_batch = st.radio(
+            "Crop Batch",('1', '2'))
+            
+
+            if st.button('Review Data'):
+                dataAdd = AddData(municipalities,dFrom,
+                        dTo,crop_batch,hybrid,inbrid,upland,
+                        lowland,farmer,area)
+                done = dataAdd.addData()
+
+                if done:
+                    st.table(dataAdd.getDataTemporary())
+            if st.button('Submit Data'):
+                st.write("Naka Submitman")
+                storeResource.getProduction()
         
         case 'Generate  Report':
+            year = visualize.selectYear()
+            print(year)
             
             st.subheader('Generate Data Either CSV or PDF format')
             fileFormat = st.selectbox(

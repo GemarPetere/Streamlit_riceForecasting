@@ -1,5 +1,5 @@
 from config import connect
-from psycopg2 import sql
+from psycopg2 import DatabaseError, sql
 import psycopg2
 
 
@@ -23,54 +23,20 @@ class StoreResources:
     def getProduction(self):
         result = []
         fetchdata = []
-
+        print("Sulod Kaayo")
         try:
             conn = connect()
             cur = conn.cursor()
 
-            
-            '''stmt1 = sql.SQL(""" SELECT municipality,year,crop_batch,crop_season,
-                                    temperature,hybrid,inbrid,
-                                    lowland,upland,production_mt
-                                FROM public.production ORDER BY year DESC;""")
-            cur.execute(stmt1)
-            conn.commit()
-            fetchdata.append(cur.fetchall())
-            result = cur.rowcount
-
-            if result:
-                c = 0
-                for x in fetchdata:
-                    for y in x:
-                        stmt2 = sql.SQL("""INSERT INTO
-                                            public.resources(municipality, year, crop_batch,crop_season, weather,hybrid, inbrid, lowland, upland,production_mt)
-                                        SELECT '{municipality}', '{year}', '{crop_batch}','{crop_season}', '{weather_data}', '{hybrid}', '{inbred}', '{lowland}', '{upland}','{total}'
-                                        WHERE
-                                            NOT EXISTS (
-                                                SELECT resources_id FROM public.resources  
-                                                WHERE municipality = '{municipality}' AND year = '{year}' AND crop_batch = '{crop_batch}'
-                                        );""" .format(municipality = y[0],year = y[1],
-                                                    crop_batch = y[2],  crop_season = y[3],
-                                                    weather_data = y[4], hybrid = y[5], 
-                                                    inbred = y[6],lowland = y[7], 
-                                                    upland = y[8],total = y[9]))
-                        cur.execute(stmt2)
-                        conn.commit()
-                        result2 = cur.rowcount
-                    
-            cur.close()'''
-
             stmt1 = sql.SQL(""" SELECT municipality,year,crop_batch,crop_season,
-                                    temperature,hybrid,inbrid,
-                                    lowland,upland,production_mt
-                                FROM public.test_production ORDER BY year DESC;""")
+                                    temperature,hybrid,inbrid,lowland,upland,production_mt
+                                FROM public.datatemporary ORDER BY year DESC;""")
             cur.execute(stmt1)
             conn.commit()
             fetchdata.append(cur.fetchall())
             result = cur.rowcount
 
             if result:
-               
                 
                 municipal = ""
                 year = ""
@@ -84,7 +50,6 @@ class StoreResources:
                 weather = 0.0
 
                 for datas in fetchdata:
-                    print(datas[0])
                     x = 0
                     while x < len(datas):
                         y = 0
@@ -121,7 +86,7 @@ class StoreResources:
                             y+=1
 
                         stmt2 = sql.SQL("""INSERT INTO
-                                            public.test_resources(municipality, year, crop_batch,crop_season, weather,
+                                            public.resources(municipality, year, crop_batch,crop_season, weather,
                                                             hybrid, inbrid, lowland, upland,production_mt)
                                                             
                                         SELECT '{municipality}', '{year}', '{crop_batch}','{crop_season}', 
@@ -130,7 +95,7 @@ class StoreResources:
                                             NOT EXISTS (
                                                 SELECT resources_id FROM public.test_resources  
                                                 WHERE municipality = '{municipality}' AND year = '{year}' AND crop_batch = '{crop_batch}'
-                                        );""" .format(municipality = municipal,year = year,
+                                        ); """.format(municipality = municipal,year = year,
                                                     crop_batch = cropBatch,crop_season = cropSeason,
                                                     weather_data = weather, hybrid = hybrid, 
                                                     inbred = inbrid,lowland = lowland, 
@@ -138,10 +103,27 @@ class StoreResources:
                         cur.execute(stmt2)
                         conn.commit()
                         result2 = cur.rowcount
+
+                        if result2:
+                            print(result2)
+                            self.deleteDataTemporary()
                             
                         x+=1
                 cur.close()
 
         except psycopg2.DatabaseError as error:
             print(error)
+            return error
+
+    def deleteDataTemporary(self):
+        try:
+            conn = connect()
+            cur = conn.cursor()
+
+            stmt1 = sql.SQL(""" DELETE FROM public.datatemporary""")
+            cur.execute(stmt1)
+            conn.commit()
+
+            print("Successfully Deleted!")
+        except psycopg2.DatabaseError as error:
             return error
